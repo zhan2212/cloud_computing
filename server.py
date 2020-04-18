@@ -16,7 +16,7 @@ app = Flask(__name__)
 
 @app.route('/annotations', methods=["POST"])
 def submit():
-    fileName = str(request.args.get('input_file')) # get input file name
+    fileName = str(request.form['input_file']) # get input file name
     # Generating Random id’s using UUID in Python. Geeks For Geeks [Source Code]
     # https://www.geeksforgeeks.org/generating-random-ids-using-uuid-python/
     UUID = str(uuid.uuid4()) # generate uuid
@@ -93,19 +93,18 @@ def retrieve(job_id):
     
     if os.path.exists(completeFile):
         res['data']['job_status'] = "completed"
+        logFile = os.path.join(cwd, "data", destFolder,fileName + ".vcf.count.log" ) 
+        try:
+            # read content from the log file
+            with open(logFile) as f:
+                res['data']['log'] = f.read().replace('\n', '')
+        except FileNotFoundError:
+            # report log file not found error
+            return {'code': 404,
+                    'status': 'error',
+                    'message': 'Log file not found.'}
     else:
         res['data']['job_status'] = "running"
-        
-    logFile = os.path.join(cwd, "data", destFolder,fileName + ".vcf.count.log" ) 
-    try:
-        # read content from the log file
-        with open(logFile) as f:
-            res['data']['log'] = f.read().replace('\n', '')
-    except FileNotFoundError:
-        # report log file not found error
-        return {'code': 404,
-                'status': 'error',
-                'message': 'Log file not found.'}
     return res
 
 
@@ -120,18 +119,18 @@ def retrieveList():
     res['data'] = {}
     res['data']['jobs'] = []
     
-    for file in files:
+    for fileName in files:
         # iterate through all job folders
-        if os.path.isdir(os.path.join(cwd, "data",file,'')):
-            job_id = file.split("_")[1]
-            url = "/annotaions/" + job_id
-            res['data']['jobs'] = {}
-            res['data']['jobs']['job_id'] = job_id
-            res['data']['jobs']['job_details'] = url
+        if os.path.isdir(os.path.join(cwd, "data",fileName,'')):
+            job_id = fileName.split("_")[-1]
+            url = "/annotations/" + job_id
+            res['data']['jobs'].append({
+                'job_id':job_id, 'job_details': url
+                })
     return res
        
  
 if __name__ == "__main__":
-    app.run(host="0,0,0,0", port=5000)
+    app.run(host="0.0.0.0", port=5000)
 
 
