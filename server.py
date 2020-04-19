@@ -8,7 +8,7 @@ Created on Fri Apr 17 10:53:35 2020
 
 import subprocess
 import uuid
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 import os
 from shutil import copyfile
 
@@ -40,9 +40,16 @@ def submit():
     # built-in exceptions [Source Code] https://docs.python.org/3/library/exceptions.html
     except FileNotFoundError:
         # report error
-        return {'code': 404,
+        res = {'code': 404,
                 'status': 'error',
                 'message': 'Input file not found.' }
+        # Return HTTP status code 201 in flask. Stack Overflow [Source  Code]
+        # https://stackoverflow.com/questions/7824101/return-http-status-code-201-in-flask
+        # make response and set headers
+        response = make_response(jsonify(res), 404)
+        response.headers['Content-Type'] = 'application/json'
+        response.headers['Code'] = 404
+        return response
 
     try:
         # subprocess management [Source Code]
@@ -52,17 +59,31 @@ def submit():
         process = subprocess.Popen(command, shell=True,stdout=subprocess.PIPE)
     except:
         # report launch error
-        return {'code': 500,
+        res = {'code': 500,
                 'status': 'error',
                 'message': 'Fail to launch the annotator job.'}
+        # Return HTTP status code 201 in flask. Stack Overflow [Source  Code]
+        # https://stackoverflow.com/questions/7824101/return-http-status-code-201-in-flask
+        # make response and set headers
+        response = make_response(jsonify(res), 500)
+        response.headers['Content-Type'] = 'application/json'
+        response.headers['Code'] = 500
+        return response
+        
     # dictionary to store output data
     res = {}
     res['code'] = 201
     res['data'] = {}
     res['data']['job_id'] = UUID
     res['data']['input_file'] = fileName + '.vcf'
-    
-    return jsonify(res)
+    # Return HTTP status code 201 in flask. Stack Overflow [Source  Code]
+    # https://stackoverflow.com/questions/7824101/return-http-status-code-201-in-flask
+    # make response and set headers
+    response = make_response(jsonify(res), 201)
+    response.headers['Content-Type'] = 'application/json'
+    response.headers['Code'] = 201
+    return response
+
     
     
 @app.route('/annotations/<job_id>', methods=["GET"])
@@ -100,12 +121,26 @@ def retrieve(job_id):
                 res['data']['log'] = f.read().replace('\n', '')
         except FileNotFoundError:
             # report log file not found error
-            return {'code': 404,
+            res = {'code': 404,
                     'status': 'error',
                     'message': 'Log file not found.'}
+            # Return HTTP status code 201 in flask. Stack Overflow [Source  Code]
+            # https://stackoverflow.com/questions/7824101/return-http-status-code-201-in-flask
+            # make response and set headers
+            response = make_response(jsonify(res), 404)
+            response.headers['Code'] = 404
+            response.headers['Content-Type'] = 'application/json'
+            return response
     else:
         res['data']['job_status'] = "running"
-    return res
+        
+    # Return HTTP status code 201 in flask. Stack Overflow [Source  Code]
+    # https://stackoverflow.com/questions/7824101/return-http-status-code-201-in-flask
+    # make response and set headers
+    response = make_response(jsonify(res), 200)
+    response.headers['Code'] = 200
+    response.headers['Content-Type'] = 'application/json'
+    return response
 
 
 @app.route('/annotations', methods=["GET"])
@@ -127,7 +162,13 @@ def retrieveList():
             res['data']['jobs'].append({
                 'job_id':job_id, 'job_details': url
                 })
-    return res
+    # Return HTTP status code 201 in flask. Stack Overflow [Source  Code]
+    # https://stackoverflow.com/questions/7824101/return-http-status-code-201-in-flask
+    # make response and set headers
+    response = make_response(jsonify(res), 200)
+    response.headers['Code'] = 200
+    response.headers['Content-Type'] = 'application/json'
+    return response
        
  
 if __name__ == "__main__":
