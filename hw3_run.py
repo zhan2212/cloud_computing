@@ -27,7 +27,7 @@ class Timer(object):
         self.end = time.time()
         self.secs = self.end - self.start
         if self.verbose:
-        print(f"Approximate runtime: {self.secs:.2f} seconds")
+            print(f"Approximate runtime: {self.secs:.2f} seconds")
 
 if __name__ == '__main__':
 	# Call the AnnTools pipeline
