@@ -42,8 +42,8 @@ if __name__ == '__main__':
             path = ''
             for i in range(len(data)-1):
                 path += data[i] + '/'
-            fileName = data[-1]
-            fileName = fileName.split('.vcf')[0]
+            fullFileName = data[-1]
+            fileName = fullFileName.split('.vcf')[0]
             
             cwd = os.getcwd()
 
@@ -62,8 +62,12 @@ if __name__ == '__main__':
             except ClientError as e:
                 print(e)
             
-            
             # 3. Clean up (delete) local job files
+            folderPath = os.path.join(cwd, path)
+            print(folderPath)
+            print(fullFileName)
+            os.remove(folderPath)
+            os.remove(fullFileName)
     else:
         print("A valid .vcf file must be provided as input to this program.")
 
