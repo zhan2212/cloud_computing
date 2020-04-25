@@ -16,26 +16,24 @@ import boto3
 """A rudimentary timer for coarse-grained profiling
 """
 class Timer(object):
-  def __init__(self, verbose=True):
-    self.verbose = verbose
+    def __init__(self, verbose=True):
+        self.verbose = verbose
 
-  def __enter__(self):
-    self.start = time.time()
-    return self
+    def __enter__(self):
+        self.start = time.time()
+        return self
 
-  def __exit__(self, *args):
-    self.end = time.time()
-    self.secs = self.end - self.start
-    if self.verbose:
-      print(f"Approximate runtime: {self.secs:.2f} seconds")
+    def __exit__(self, *args):
+        self.end = time.time()
+        self.secs = self.end - self.start
+        if self.verbose:
+        print(f"Approximate runtime: {self.secs:.2f} seconds")
 
 if __name__ == '__main__':
 	# Call the AnnTools pipeline
-	if len(sys.argv) > 1:
-		with Timer():
-			driver.run(sys.argv[1], 'vcf')
-            
-            s3_client = boto3.client('s3')
+    if len(sys.argv) > 1:
+        with Timer():
+            driver.run(sys.argv[1], 'vcf')
             # 1. Upload the results file
             filePath = sys.argv[1]
             data = filePath.split('/')
