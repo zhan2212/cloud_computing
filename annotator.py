@@ -1,0 +1,111 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Apr 23 20:51:04 2020
+
+@author: yueyangzhang
+"""
+
+import subprocess
+from flask import Flask, request, jsonify, make_response, render_template
+import os
+from shutil import copyfile
+import boto3
+import botocore
+
+app = Flask(__name__)
+
+@app.route('/annotations', methods=["GET"])
+def submit():
+    path = request.args.get('key')
+    fileName = path.split('/')[-1]
+
+    cwd = os.getcwd() # get current path
+    savePath = os.path.join(cwd, "data", fileName)
+    
+    
+    # https://boto3.amazonaws.com/v1/documentation/api/1.9.42/guide/s3-example-download-file.html
+    BUCKET_NAME = 'gas-inputs' # replace with your bucket name
+    KEY = path # replace with your object key
+    s3 = boto3.resource('s3')
+    
+    try:
+        s3.Bucket(BUCKET_NAME).download_file(KEY, savePath)
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] == "404":
+            print("The object does not exist.")
+        else:
+            raise
+
+    
+    # Python Check If File or Directory Exists. Guru99
+    # [Source Code] https://www.guru99.com/python-check-if-file-exists.html
+    folderPath = os.path.join(cwd, "data", fileName)
+    if not os.path.exists(folderPath):
+        # create folder to store output file
+        os.mkdir(folderPath)
+        
+    # How to move a file in Python. Stack Overflow [Source Code]
+    # https://stackoverflow.com/questions/8858008/how-to-move-a-file-in-python
+    srcDir = cwd+'/data/'+fileName
+    destDir = cwd+'/data/'+fileName+'/'+fileName
+    try:
+        # copy raw input file to output folder
+        copyfile(srcDir, destDir)
+    # built-in exceptions [Source Code] https://docs.python.org/3/library/exceptions.html
+    except FileNotFoundError:
+        # report error
+        res = {'code': 404,
+                'status': 'error',
+                'message': 'Input file not found.' }
+        # Return HTTP status code 201 in flask. Stack Overflow [Source  Code]
+        # https://stackoverflow.com/questions/7824101/return-http-status-code-201-in-flask
+        # make response and set headers
+        response = make_response(jsonify(res), 404)
+        response.headers['Content-Type'] = 'application/json'
+        response.headers['Code'] = 404
+        return response
+
+    try:
+        # subprocess management [Source Code]
+        # https://docs.python.org/3/library/subprocess.html
+        # run sub process
+        command = "python hw3_run.py data/" +fileName + "/" + fileName
+        print(command)
+        process = subprocess.Popen(command, shell=True,stdout=subprocess.PIPE)
+    except:
+        # report launch error
+        res = {'code': 500,
+                'status': 'error',
+                'message': 'Fail to launch the annotator job.'}
+        # Return HTTP status code 201 in flask. Stack Overflow [Source  Code]
+        # https://stackoverflow.com/questions/7824101/return-http-status-code-201-in-flask
+        # make response and set headers
+        response = make_response(jsonify(res), 500)
+        response.headers['Content-Type'] = 'application/json'
+        response.headers['Code'] = 500
+        return response
+        
+    # dictionary to store output data
+    res = {}
+    res['code'] = 201
+    res['data'] = {}
+    res['data']['job_id'] = UUID
+    res['data']['input_file'] = fileName
+    # Return HTTP status code 201 in flask. Stack Overflow [Source  Code]
+    # https://stackoverflow.com/questions/7824101/return-http-status-code-201-in-flask
+    # make response and set headers
+    response = make_response(jsonify(res), 201)
+    response.headers['Content-Type'] = 'application/json'
+    response.headers['Code'] = 201
+    return response
+
+    
+    
+
+       
+ 
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
+
+
