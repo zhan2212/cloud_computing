@@ -18,7 +18,7 @@ def annotate():
     fields = {"acl": "private"}
     conditions = [
         {"acl": "private"},
-        ["starts-with", "$success_action_redirect", "http://0.0.0.0:8000/annotations"]
+        ["starts-with", "$success_action_redirect", "http://zhan2212-hw3-ann.ucmpcs.org:5000/annotations"]
     ]
     # generate id
     UUID = str(uuid.uuid4()) # generate uuid
