@@ -14,6 +14,8 @@ import driver
 import boto3
 import os
 from botocore.exceptions import ClientError
+import shutil
+
 
 """A rudimentary timer for coarse-grained profiling
 """
@@ -65,9 +67,7 @@ if __name__ == '__main__':
             # 3. Clean up (delete) local job files
             folderPath = os.path.join(cwd, path)
             print(folderPath)
-            print(fullFileName)
-            os.remove(folderPath)
-            os.remove(fullFileName)
+            shutil.rmtree(folderPath)
     else:
         print("A valid .vcf file must be provided as input to this program.")
 

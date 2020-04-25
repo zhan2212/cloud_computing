@@ -53,6 +53,7 @@ def submit():
     try:
         # copy raw input file to output folder
         copyfile(srcDir, destDir)
+        os.remove(srcDir)
     # built-in exceptions [Source Code] https://docs.python.org/3/library/exceptions.html
     except FileNotFoundError:
         # report error
