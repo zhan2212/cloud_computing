@@ -38,36 +38,46 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         with Timer():
             driver.run(sys.argv[1], 'vcf')
-            # 1. Upload the results file
+            # Upload the results file
             filePath = sys.argv[1]
-            data = filePath.split('/')
+            # extract path and file name
+            data = filePath.split('/') 
             path = ''
             for i in range(len(data)-1):
                 path += data[i] + '/'
             fullFileName = data[-1]
             fileName = fullFileName.split('.vcf')[0]
-            
+            # get the current path
             cwd = os.getcwd()
-
+            # connect with s3
             s3_client = boto3.client('s3')
             # path of the complete file
-            completeFile = os.path.join(cwd, path, fileName + ".annot.vcf" ) #.annot
+            completeFile = os.path.join(cwd, path, fileName + ".annot.vcf" )
             try:
+                # upload results file to s3 bucket
                 response = s3_client.upload_file(completeFile, 'gas-results', 'zhan2212/UserX/' + fileName + ".annot.vcf")
             except ClientError as e:
+                print('Fail to upload results file!')
                 print(e)
             
-            # 2. Upload the log file
+            # Upload the log file
             logFile = os.path.join(cwd, path, fileName + ".vcf.count.log" )
             try:
+                # upload log file to s3 bucket
                 response = s3_client.upload_file(logFile, 'gas-results', 'zhan2212/UserX/' + fileName + ".vcf.count.log")
             except ClientError as e:
+                print('Fail to upload log file!')
                 print(e)
             
-            # 3. Clean up (delete) local job files
-            folderPath = os.path.join(cwd, path)
-            print(folderPath)
-            shutil.rmtree(folderPath)
+            # Clean up (delete) local job files
+            try:
+                # folder to save all the files
+                folderPath = os.path.join(cwd, path)
+                # remvve the folder
+                shutil.rmtree(folderPath)
+            except FileNotFoundError as e:
+                print("Fail to find the directory")
+                print(e)
     else:
         print("A valid .vcf file must be provided as input to this program.")
 
