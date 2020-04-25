@@ -60,8 +60,7 @@ if __name__ == '__main__':
             
             
             # 3. Clean up (delete) local job files
-
-	else:
-		print("A valid .vcf file must be provided as input to this program.")
+    else:
+        print("A valid .vcf file must be provided as input to this program.")
 
 ### EOF
