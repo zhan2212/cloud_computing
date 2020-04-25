@@ -12,6 +12,8 @@ import sys
 import time
 import driver
 import boto3
+import os
+from botocore.exceptions import ClientError
 
 """A rudimentary timer for coarse-grained profiling
 """
@@ -44,17 +46,19 @@ if __name__ == '__main__':
             fileName = fileName.split('.vcf')[0]
             
             cwd = os.getcwd()
+
+            s3_client = boto3.client('s3')
             # path of the complete file
             completeFile = os.path.join(cwd, path, fileName + ".annot.vcf" ) #.annot
             try:
-                response = s3_client.upload_file(completeFile, 'gas-results', 'zhan2212/' + fileName + ".annot.vcf")
+                response = s3_client.upload_file(completeFile, 'gas-results', 'zhan2212/UserX/' + fileName + ".annot.vcf")
             except ClientError as e:
                 print(e)
             
             # 2. Upload the log file
             logFile = os.path.join(cwd, path, fileName + ".vcf.count.log" )
             try:
-                response = s3_client.upload_file(completeFile, 'gas-results', 'zhan2212/' + fileName + ".annot.vcf")
+                response = s3_client.upload_file(logFile, 'gas-results', 'zhan2212/UserX/' + fileName + ".vcf.count.log")
             except ClientError as e:
                 print(e)
             

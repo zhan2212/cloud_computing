@@ -36,11 +36,12 @@ def submit():
             print("The object does not exist.")
         else:
             raise
-
     
+    folderName = fileName.split('.')[0]
+    UUID = folderName.split('~')[0]
     # Python Check If File or Directory Exists. Guru99
     # [Source Code] https://www.guru99.com/python-check-if-file-exists.html
-    folderPath = os.path.join(cwd, "data", fileName)
+    folderPath = os.path.join(cwd, "data", folderName)
     if not os.path.exists(folderPath):
         # create folder to store output file
         os.mkdir(folderPath)
@@ -48,7 +49,7 @@ def submit():
     # How to move a file in Python. Stack Overflow [Source Code]
     # https://stackoverflow.com/questions/8858008/how-to-move-a-file-in-python
     srcDir = cwd+'/data/'+fileName
-    destDir = cwd+'/data/'+fileName+'/'+fileName
+    destDir = cwd+'/data/'+folderName+'/'+fileName
     try:
         # copy raw input file to output folder
         copyfile(srcDir, destDir)
@@ -70,7 +71,7 @@ def submit():
         # subprocess management [Source Code]
         # https://docs.python.org/3/library/subprocess.html
         # run sub process
-        command = "python hw3_run.py data/" +fileName + "/" + fileName
+        command = "python hw3_run.py data/" +folderName + "/" + fileName
         print(command)
         process = subprocess.Popen(command, shell=True,stdout=subprocess.PIPE)
     except:
