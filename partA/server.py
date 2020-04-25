@@ -20,7 +20,7 @@ def annotate():
     # set up the redirect URL
     conditions = [
         {"acl": "private"},
-        ["starts-with", "$success_action_redirect", "http://zhan2212-hw3.ucmpcs.org:5000/"]
+        ["starts-with", "$success_action_redirect", "http://zhan2212-hw3.ucmpcs.org:5000/annotate/files"]
     ]
     # generate id
     UUID = str(uuid.uuid4()) # generate uuid
