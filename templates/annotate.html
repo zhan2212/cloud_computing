@@ -19,8 +19,7 @@
       <input type="hidden" name="Signature" value="{{data['fields']['signature']}}">
 
       <input type="hidden" name="AWSAccessKeyId" value="{{data['fields']['AWSAccessKeyId']}}">
-      <input type="hidden" name="success_action_redirect" value="http://zhan2212-hw3.ucmpcs.org:5000/annotate/files">
-      ......
+      <input type="hidden" name="success_action_redirect" value={{url}}>
       Select input file: <input id="upload_file" type="file" name="file" />
 
       <input type="submit" value="Upload Input File" />

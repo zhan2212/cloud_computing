@@ -52,19 +52,21 @@ if __name__ == '__main__':
             # connect with s3
             s3_client = boto3.client('s3')
             # path of the complete file
-            completeFile = os.path.join(cwd, path, fileName + ".annot.vcf" )
+            completeFileName = fileName + ".annot.vcf"
+            completeFile = os.path.join(cwd, path, completeFileName)
             try:
                 # upload results file to s3 bucket
-                response = s3_client.upload_file(completeFile, 'gas-results', 'zhan2212/UserX/' + fileName + ".annot.vcf")
+                response = s3_client.upload_file(completeFile, 'gas-results', 'zhan2212/UserX/' + completeFileName)
             except ClientError as e:
                 print('Fail to upload results file!')
                 print(e)
             
             # Upload the log file
-            logFile = os.path.join(cwd, path, fileName + ".vcf.count.log" )
+            logFileName = fileName + ".vcf.count.log" 
+            logFile = os.path.join(cwd, path, logFileName)
             try:
                 # upload log file to s3 bucket
-                response = s3_client.upload_file(logFile, 'gas-results', 'zhan2212/UserX/' + fileName + ".vcf.count.log")
+                response = s3_client.upload_file(logFile, 'gas-results', 'zhan2212/UserX/' + logFileName)
             except ClientError as e:
                 print('Fail to upload log file!')
                 print(e)
@@ -78,6 +80,37 @@ if __name__ == '__main__':
             except FileNotFoundError as e:
                 print("Fail to find the directory")
                 print(e)
+            # extract job id (UUID) from the inputs
+            UUID = sys.argv[2]
+            try:
+                # Step 3: Create, Read, Update, and Delete an Item with Python. 
+                # AWS Documentation. [Source Code]
+                # https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GettingStarted.Python.03.html
+                # connect with database
+                dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+                # identify the table
+                ann_table = dynamodb.Table('zhan2212_annotations')
+                # update the data for item
+                ann_table.update_item(
+                        Key={
+                        'job_id': UUID
+                        },
+                        UpdateExpression="set s3_results_bucket = :r1, \
+                                              s3_key_result_file = :r2, \
+                                              s3_key_log_file = :r3, \
+                                              complete_time = :r4, \
+                                              job_status = :r5",
+                        ExpressionAttributeValues={
+                        ':r1': "gas-results",
+                        ':r2': completeFileName,
+                        ':r3': logFileName,
+                        ':r4': int(time.time()),
+                        ':r5': "COMPLETED"
+                        }) 
+            except ClientError as e:
+                print('Fail to update the data in table!')
+                print(e)
+                
     else:
         print("A valid .vcf file must be provided as input to this program.")
 

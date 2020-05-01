@@ -10,31 +10,68 @@ from flask import Flask, request, jsonify, render_template, make_response
 import boto3
 import uuid
 from botocore.exceptions import ClientError
+import time
+import requests
+
 
 app = Flask(__name__)
 
+
+@app.route("/annotate/job", methods=["GET"])
+def annotate_job():
+    # extract name from the URL
+    path = request.args.get('key')
+    fileName = path.split('/')[-1]
+    input_file_name = fileName.split("~")[1]
+    UUID = fileName.split("~")[0]
+    # Create a job item and persist it to the annotations database
+    # Step 3: Create, Read, Update, and Delete an Item with Python. 
+    # AWS Documentation. [Source Code]
+    # https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GettingStarted.Python.03.html
+    # connect with database
+    dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+    # identify table
+    ann_table = dynamodb.Table('zhan2212_annotations')
+    # prepare the data for database
+    data = {"job_id": UUID,
+            "user_id": 'userX', 
+            "input_file_name": input_file_name, 
+            "s3_inputs_bucket": "gas-inputs",
+            "s3_key_input_file": fileName, 
+            "submit_time": int(time.time()),
+            "job_status": "PENDING"
+    }
+    # insert the data into the table
+    ann_table.put_item(Item=data) 
+    # POST job request to the annotator
+    ann_job_response = requests.post("http://zhan2212-hw4-ann.ucmpcs.org:5000/annotations", data=data)
+    return (ann_job_response.text)
+
+
+
 @app.route('/annotate', methods=['GET'])
 def annotate():
+    print(request.url)
     # Define S3 policy fields and conditions
     fields = {"acl": "private"}
     # set up the redirect URL
     conditions = [
         {"acl": "private"},
-        ["starts-with", "$success_action_redirect", "http://zhan2212-hw3-ann.ucmpcs.org:5000/annotations"]
+        ["starts-with", "$success_action_redirect", str(request.url) + "/job"]
     ]
-    # generate id
-    UUID = str(uuid.uuid4()) # generate uuid
     # set the username
     userName = 'userX'
     try:
         # connect to S3 server
         s3 = boto3.client('s3')
+        # generate UUID
+        UUID = str(uuid.uuid4())
         # Generate signed POST request
         # Boto 3 Docs 1.12.46 documentation [Source Code]
         # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html
         post = s3.generate_presigned_post(
             Bucket = 'gas-inputs', # bucket name
-            Key = 'zhan2212/' + userName + '/' + UUID + '~${filename}', # path to upload
+            Key = 'zhan2212/' + userName + '/' + UUID + '~' + '${filename}', # path to upload
             Fields = fields, # fileds
             Conditions = conditions, # conditions
             ExpiresIn = 200 # expire time 200s
@@ -53,7 +90,7 @@ def annotate():
         return response
 
     # Render the upload form template and pass post to HTML
-    return render_template("annotate.html", data = post)
+    return render_template("annotate.html", data = post, url = str(request.url) + "/job")
 
 @app.route('/annotate/files', methods=['GET'])
 def get_object_list():
