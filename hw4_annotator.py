@@ -50,9 +50,9 @@ def request_annotation():
                 'job_id': UUID
                 },
                 UpdateExpression="set job_status = :r1",
-                ConditionExpression="attribute_exists(job_status) and job_status in (:r2)",
+                ConditionExpression="attribute_exists (job_status) and job_status = :r2",
                 ExpressionAttributeValues={
-                ':r1': "RUNNING", ':r2': "PENDING"
+                ":r1": "RUNNING", ":r2": "PENDING"
                 }) 
     except:
         # report error
