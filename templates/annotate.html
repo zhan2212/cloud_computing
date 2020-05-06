@@ -13,13 +13,9 @@
       <!-- Include required AWS S3 parameters as hidden fields here -->
 	<!-- Minimum required: S3 key, acl, policy, signature, AWS Access Key -->
       <!-- As an example, the AWS Access Key is shown below -->
-      <input type="hidden" name="key" value="{{data['fields']['key']}}">
-      <input type="hidden" name="acl" value="{{data['fields']['acl'] }}">
-      <input type="hidden" name="Policy" value="{{data['fields']['policy']}}">
-      <input type="hidden" name="Signature" value="{{data['fields']['signature']}}">
-
-      <input type="hidden" name="AWSAccessKeyId" value="{{data['fields']['AWSAccessKeyId']}}">
-      <input type="hidden" name="success_action_redirect" value={{url}}>
+      {% for key,value in data.fields.items() %}
+        <input type="hidden" name="{{key}}" value="{{value}}">
+      {% endfor %}
       Select input file: <input id="upload_file" type="file" name="file" />
 
       <input type="submit" value="Upload Input File" />

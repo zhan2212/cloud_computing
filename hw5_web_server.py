@@ -11,7 +11,8 @@ import boto3
 import uuid
 from botocore.exceptions import ClientError
 import time
-import requests
+import json
+import botocore
 
 
 app = Flask(__name__)
@@ -43,9 +44,28 @@ def annotate_job():
     }
     # insert the data into the table
     ann_table.put_item(Item=data) 
-    # POST job request to the annotator
-    ann_job_response = requests.post("http://zhan2212-hw4-ann.ucmpcs.org:5000/annotations", data=data)
-    return (ann_job_response.text)
+    # JSON encoding error publishing sns message with boto3. Stack Overflow. [Source Code]
+    # https://stackoverflow.com/questions/35071549/json-encoding-error-publishing-sns-message-with-boto3
+    # connect to SNS server
+    sns = boto3.client('sns')
+    # Publish a simple message to the specified SNS topic
+    response = sns.publish(
+        TopicArn='arn:aws:sns:us-east-1:127134666975:zhan2212_job_requests',   
+        Message = json.dumps(data) 
+    )
+    # dictionary to store output data
+    res = {}
+    res['code'] = 201
+    res['data'] = {}
+    res['data']['job_id'] = UUID
+    res['data']['input_file'] = fileName
+    # Return HTTP status code 201 in flask. Stack Overflow [Source  Code]
+    # https://stackoverflow.com/questions/7824101/return-http-status-code-201-in-flask
+    # make response and set headers
+    response = make_response(jsonify(res), 201)
+    response.headers['Content-Type'] = 'application/json'
+    response.headers['Code'] = 201
+    return response
 
 
 
@@ -53,7 +73,7 @@ def annotate_job():
 def annotate():
     print(request.url)
     # Define S3 policy fields and conditions
-    fields = {"acl": "private"}
+    fields = {"acl": "private", "success_action_redirect": str(request.url) + "/job"}
     # set up the redirect URL
     conditions = [
         {"acl": "private"},
@@ -62,8 +82,11 @@ def annotate():
     # set the username
     userName = 'userX'
     try:
+        # Please provide better documentation, and examples, for s3 `generate_presigned_post`
+        # Github. [Source Code]
+        # https://github.com/boto/boto3/issues/1857
         # connect to S3 server
-        s3 = boto3.client('s3')
+        s3 = boto3.client('s3', config = botocore.config.Config(signature_version='s3v4'))
         # generate UUID
         UUID = str(uuid.uuid4())
         # Generate signed POST request
