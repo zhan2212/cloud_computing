@@ -14,7 +14,6 @@ import driver
 import boto3
 import os
 from botocore.exceptions import ClientError
-import shutil
 
 
 """A rudimentary timer for coarse-grained profiling
@@ -73,13 +72,22 @@ if __name__ == '__main__':
             
             # Clean up (delete) local job files
             try:
-                # folder to save all the files
-                folderPath = os.path.join(cwd, path)
-                # remvve the folder
-                shutil.rmtree(folderPath)
+                # remove the folder result file
+                os.remove(completeFile)
+                # remove log file
+                os.remove(logFile)
+                rawFilePath = os.path.join(cwd,filePath)
+                # remove raw file
+                os.remove(rawFilePath)
+                # remove the empty folder
+                folderPath = os.path.join(cwd,path)
+                os.rmdir(folderPath)
+                
             except FileNotFoundError as e:
                 print("Fail to find the directory")
                 print(e)
+            except:
+                print('Fail to remove local data.')
             # extract job id (UUID) from the inputs
             UUID = sys.argv[2]
             try:

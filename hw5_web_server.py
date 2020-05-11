@@ -43,7 +43,15 @@ def annotate_job():
             "job_status": "PENDING"
     }
     # insert the data into the table
-    ann_table.put_item(Item=data) 
+    try:
+        ann_table.put_item(Item=data) 
+    except ClientError as e:
+        print(e)
+        res = {}
+        res['code'] = 500
+        res['status'] = 'error'
+        res['messgae'] = 'Fail to save job in database'
+        return jsonify(res)
     # JSON encoding error publishing sns message with boto3. Stack Overflow. [Source Code]
     # https://stackoverflow.com/questions/35071549/json-encoding-error-publishing-sns-message-with-boto3
     # connect to SNS server
